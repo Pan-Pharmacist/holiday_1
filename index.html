@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pharmacist Leave System</title>
+    <title>ระบบลงวันลาเภสัชกร</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -12,21 +12,25 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
     <style>
+        /* ... (CSS เดิมทั้งหมด) ... */
         :root { --primary: #818cf8; --secondary: #f472b6; }
         body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; color: #334155; }
-        
         .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.6); box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05); }
         .nav-item.active { background: #e0e7ff; color: #4338ca; border-right: 4px solid #4338ca; font-weight: 600; }
         .page-transition { animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Calendar Fixes */
-        .fc-event { border: none; font-size: 0.75rem; border-radius: 4px; transition: 0.2s; cursor: pointer; }
-        .fc-event:hover { transform: scale(1.02); filter: brightness(1.1); z-index: 50; }
-        .day-count-badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: white; border-radius: 99px; min-width: 20px; height: 20px; font-size: 0.7rem; display: flex; justify-content: center; align-items: center; font-weight: bold; padding: 0 4px; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .fc-event { border: none !important; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); margin-bottom: 2px !important; }
+        .day-count-badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: white; border-radius: 99px; min-width: 20px; height: 20px; font-size: 0.75rem; display: flex; justify-content: center; align-items: center; font-weight: bold; padding: 0 4px; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.2); pointer-events: none; }
         .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.6); backdrop-filter: blur(4px); z-index: 9999; display: flex; justify-content: center; align-items: center; }
+        
+        .fc-event-main { padding: 2px 4px; overflow: hidden; }
+        .evt-name { font-weight: 700; font-size: 0.85em; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .evt-type { font-size: 0.75em; opacity: 0.9; display: block; line-height: 1; margin-top: 1px; }
+        .evt-note { font-size: 0.7em; font-style: italic; opacity: 0.7; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
     </style>
 </head>
 <body class="overflow-hidden h-screen w-screen flex text-slate-700">
@@ -36,20 +40,12 @@
             <div class="w-20 h-20 bg-gradient-to-tr from-indigo-400 to-purple-400 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg text-white text-3xl transform rotate-3">
                 <i class="fa-solid fa-staff-snake"></i>
             </div>
-            <h1 class="text-2xl font-bold text-gray-800 mb-1">Pharmacist Leave</h1>
-            <p class="text-gray-500 mb-8 text-sm font-light">ระบบจัดการวันลาเภสัชกร</p>
+            <h1 class="text-2xl font-bold text-gray-800 mb-1">โปรแกรมลงวันลาเภสัชกร</h1>
+            <p class="text-gray-500 mb-8 text-sm font-light">กลุ่มงานเภสัชกรรม งานผู้ป่วยนอก</p>
             <form id="loginForm" class="space-y-4 text-left">
-                <div>
-                    <label class="text-xs font-bold text-indigo-400 uppercase ml-1">Username</label>
-                    <input type="text" id="user" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-white focus:ring-2 focus:ring-indigo-300 outline-none transition placeholder-gray-400" placeholder="ชื่อผู้ใช้" required>
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-indigo-400 uppercase ml-1">Password</label>
-                    <input type="password" id="pass" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-white focus:ring-2 focus:ring-indigo-300 outline-none transition placeholder-gray-400" placeholder="รหัสผ่าน" required>
-                </div>
-                <button type="submit" id="loginBtn" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3.5 rounded-xl shadow-lg hover:shadow-xl transition-all transform active:scale-95 flex justify-center items-center gap-2">
-                    <span>เข้าสู่ระบบ</span>
-                </button>
+                <div><label class="text-xs font-bold text-indigo-400 uppercase ml-1">Username</label><input type="text" id="user" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-white focus:ring-2 focus:ring-indigo-300 outline-none transition placeholder-gray-400" placeholder="ชื่อผู้ใช้" required></div>
+                <div><label class="text-xs font-bold text-indigo-400 uppercase ml-1">Password</label><input type="password" id="pass" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-white focus:ring-2 focus:ring-indigo-300 outline-none transition placeholder-gray-400" placeholder="รหัสผ่าน" required></div>
+                <button type="submit" id="loginBtn" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3.5 rounded-xl shadow-lg hover:shadow-xl transition-all transform active:scale-95 flex justify-center items-center gap-2"><span>เข้าสู่ระบบ</span></button>
             </form>
         </div>
     </div>
@@ -57,10 +53,10 @@
     <nav id="sidebar" class="w-64 bg-white border-r border-slate-100 h-full hidden flex-col z-20 shadow-sm">
         <div class="p-6 flex items-center gap-3">
             <div class="w-10 h-10 bg-indigo-500 rounded-xl text-white flex items-center justify-center text-xl shadow-md"><i class="fa-solid fa-clinic-medical"></i></div>
-            <div><h2 class="font-bold text-slate-800 leading-tight">Pharma<br>System</h2></div>
+            <div><h2 class="font-bold text-slate-800 leading-tight">ข้อมูล<br>เภสัชกร</h2></div>
         </div>
         <div class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-            <button onclick="nav('dashboard')" class="nav-item w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-slate-500 hover:bg-slate-50 transition active"><i class="fa-solid fa-chart-pie w-5"></i> Dashboard</button>
+            <button onclick="nav('dashboard')" class="nav-item w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-slate-500 hover:bg-slate-50 transition active"><i class="fa-solid fa-chart-pie w-5"></i> กระดานข้อมูล</button>
             <button onclick="nav('form')" class="nav-item w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-slate-500 hover:bg-slate-50 transition"><i class="fa-solid fa-file-pen w-5"></i> ลงวันลา</button>
             <button onclick="nav('calendar')" class="nav-item w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-slate-500 hover:bg-slate-50 transition"><i class="fa-regular fa-calendar-days w-5"></i> ปฏิทิน</button>
             <button onclick="nav('history')" class="nav-item w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-slate-500 hover:bg-slate-50 transition"><i class="fa-solid fa-clock-rotate-left w-5"></i> ประวัติของฉัน</button>
@@ -72,6 +68,8 @@
             </div>
         </div>
         <div class="p-4 border-t border-slate-100">
+            <button id="btnConnectLine" onclick="connectLine()" class="hidden w-full mb-3 text-xs bg-[#06c755] text-white hover:bg-[#05b34c] py-2 rounded-lg transition items-center justify-center gap-2"><i class="fa-brands fa-line text-lg"></i> รับแจ้งเตือนทาง LINE</button>
+            
             <div class="flex items-center gap-3 cursor-pointer p-2 rounded-xl hover:bg-slate-50 transition" onclick="togglePassModal()">
                 <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold shadow-md text-sm" id="avt">U</div>
                 <div class="overflow-hidden flex-1">
@@ -89,7 +87,7 @@
                 <div class="animate-spin rounded-full h-10 w-10 border-4 border-indigo-500 border-t-transparent"></div>
             </div>
         </div>
-
+        
         <div id="view-dashboard" class="page-transition max-w-7xl mx-auto">
             <div class="flex justify-between items-center mb-8">
                 <div><h2 class="text-2xl font-bold text-slate-800">ภาพรวม (Dashboard)</h2><p class="text-slate-500 text-sm">ข้อมูลประจำเดือน</p></div>
@@ -101,7 +99,7 @@
             
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                 <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <h3 class="font-bold text-slate-700 mb-4 flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-orange-100 text-orange-500 flex items-center justify-center"><i class="fa-solid fa-user-clock"></i></span> ใครลาวันนี้? (Who's Off)</h3>
+                    <h3 class="font-bold text-slate-700 mb-4 flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-orange-100 text-orange-500 flex items-center justify-center"><i class="fa-solid fa-user-clock"></i></span>เภสัชกรที่ลาวันนี้</h3>
                     <div id="whoOffContainer" class="flex flex-wrap gap-3 min-h-[60px] items-center">
                         <span class="text-slate-400 text-sm italic">กำลังโหลด...</span>
                     </div>
@@ -111,7 +109,7 @@
                     <p class="text-slate-500 text-sm relative z-10">โควต้าวส่วนตัวปีนี้</p>
                     <div class="flex items-end gap-2 mt-2 relative z-10">
                         <h3 class="text-4xl font-bold text-slate-800" id="statPersonal">0</h3>
-                        <span class="text-slate-400 text-sm mb-1 font-medium">/ 15 วัน</span>
+                        <span class="text-slate-400 text-sm mb-1 font-medium">/นับตามปี</span>
                     </div>
                     <div class="w-full bg-slate-100 rounded-full h-3 mt-4 overflow-hidden relative z-10">
                         <div class="bg-gradient-to-r from-pink-400 to-rose-500 h-3 rounded-full transition-all duration-1000 ease-out" id="statBar" style="width:0%"></div>
@@ -129,7 +127,7 @@
             <div class="bg-white p-10 rounded-3xl shadow-lg border border-slate-100">
                 <div class="flex items-center gap-4 mb-8 pb-6 border-b border-slate-100">
                     <div class="w-14 h-14 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center text-2xl"><i class="fa-solid fa-file-contract"></i></div>
-                    <div><h2 class="text-2xl font-bold text-slate-800">ลงบันทึกวันลา</h2><p class="text-slate-400 text-sm">Submit Leave Request</p></div>
+                    <div><h2 class="text-2xl font-bold text-slate-800">ลงบันทึกวันลา</h2><p class="text-slate-400 text-sm">กรอกข้อมูลด้านล่างให้ครบถ้วน</p></div>
                 </div>
                 <form id="leaveForm" class="space-y-6">
                     <div class="grid grid-cols-2 gap-6">
@@ -189,9 +187,8 @@
                 </div>
             </div>
         </div>
-
         <div id="view-adminReport" class="hidden page-transition space-y-6 max-w-6xl mx-auto">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="font-bold text-lg text-slate-800">รายงานสรุป (Export)</h3>
                     <div class="flex gap-2">
@@ -204,7 +201,6 @@
                 <div class="max-h-96 overflow-y-auto rounded-xl border border-slate-100"><table class="w-full text-sm text-left"><tbody id="repBody" class="divide-y divide-slate-50"></tbody></table></div>
             </div>
         </div>
-
         <div id="view-adminUsers" class="hidden page-transition max-w-5xl mx-auto">
             <div class="grid md:grid-cols-2 gap-6">
                 <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
@@ -230,11 +226,11 @@
     </main>
 
     <div id="passModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm hidden">
-        <div class="bg-white p-8 rounded-2xl w-96 shadow-2xl scale-100 transition-transform">
+        <div class="bg-white p-8 rounded-2xl w-96 shadow-2xl">
             <h3 class="text-xl font-bold mb-6 text-slate-800">เปลี่ยนรหัสผ่าน</h3>
             <div class="space-y-4">
-                <input type="password" id="oldPass" placeholder="รหัสผ่านเดิม" class="w-full border-slate-200 p-3 rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500">
-                <input type="password" id="newPass" placeholder="รหัสผ่านใหม่" class="w-full border-slate-200 p-3 rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500">
+                <input type="password" id="oldPass" placeholder="รหัสผ่านเดิม" class="w-full border-slate-200 p-3 rounded-xl bg-slate-50 outline-none">
+                <input type="password" id="newPass" placeholder="รหัสผ่านใหม่" class="w-full border-slate-200 p-3 rounded-xl bg-slate-50 outline-none">
             </div>
             <div class="flex justify-end gap-3 mt-8">
                 <button onclick="togglePassModal()" class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-lg">ยกเลิก</button>
@@ -253,11 +249,15 @@
     </div>
 
     <script>
-        const API = 'https://script.google.com/macros/s/AKfycbz5Jzvch3SU0L_-CJqWgKZ_Sy5kv9Zm0zA0ItvEj0KYlEVk7Jwzf6wACNkv-nIPMT7D/exec'; // *** Replace URL ***
+        // *** REPLACE WITH YOUR URL ***
+        const API = 'https://script.google.com/macros/s/AKfycbz5Jzvch3SU0L_-CJqWgKZ_Sy5kv9Zm0zA0ItvEj0KYlEVk7Jwzf6wACNkv-nIPMT7D/exec'; 
+        
+        // *** ใส่ LIFF ID ถ้าต้องการใช้ฟีเจอร์เชื่อมต่อ LINE (ถ้าไม่มีให้เว้นว่าง) ***
+        // ถ้าไม่ใช้ LIFF ให้ Admin แอดไลน์บอท แล้วพิมพ์ ID มาใส่ใน Sheet Users ช่อง G เองได้
+        const LIFF_ID = ''; 
 
         let USER=null, DATA=null, CAL=null, CHART={};
 
-        // --- AUTH ---
         document.getElementById('loginForm').addEventListener('submit', async(e)=>{
             e.preventDefault();
             const btn = document.getElementById('loginBtn');
@@ -273,13 +273,16 @@
             }
         });
 
-        // --- CORE ---
         async function init(){
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('sidebar').classList.remove('hidden'); document.getElementById('sidebar').classList.add('flex');
             document.getElementById('main').classList.remove('hidden');
             document.getElementById('uName').innerText = USER.name; document.getElementById('avt').innerText = USER.name[0];
-            if(USER.role==='admin') document.getElementById('adminMenu').classList.remove('hidden');
+            if(USER.role==='admin') {
+                document.getElementById('adminMenu').classList.remove('hidden');
+                document.getElementById('btnConnectLine').classList.remove('hidden');
+                if(USER.hasLine) document.getElementById('btnConnectLine').classList.add('hidden'); // ซ่อนถ้าเชื่อมแล้ว
+            }
 
             const res = await req({action:'init'}, true); DATA=res;
             const ph = document.getElementById('inpPh');
@@ -287,6 +290,9 @@
             if(USER.role!=='admin'){ ph.value=USER.name; ph.disabled=true; }
             document.getElementById('inpType').innerHTML=res.types.map(t=>`<option value="${t.name}">${t.name}</option>`);
             initDash(); nav('dashboard');
+            
+            // Init LIFF (Optional)
+            if(LIFF_ID) liff.init({ liffId: LIFF_ID });
         }
 
         function nav(id){
@@ -299,7 +305,7 @@
             if(id==='adminReport') loadLogs();
         }
 
-        // --- DASHBOARD ---
+        // --- DASHBOARD & CALENDAR (FIXES) ---
         function initDash(){
             const m=document.getElementById('dashMonth');
             ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'].forEach((x,i)=>m.innerHTML+=`<option value="${i+1}">${x}</option>`);
@@ -307,65 +313,82 @@
         }
         async function loadDash(){
             const res = await req({action:'dashboard', month:document.getElementById('dashMonth').value, year:new Date().getFullYear()});
-            document.getElementById('statTotal').innerText = res.total;
+            const limit = DATA.userLimit || 15;
+            // คำนวณวันลาจริงจาก Server ถ้าทำได้ หรือใช้ค่าชั่วคราว
+            document.getElementById('statPersonal').innerText = '?'; // ควรดึงจาก API myHistory
             
-            // Render Who's Off
             const wc = document.getElementById('whoOffContainer');
             wc.innerHTML = res.whoOff.length ? '' : '<p class="text-slate-400 text-sm">วันนี้ไม่มีใครลา</p>';
             res.whoOff.forEach(p => {
                 const color = (DATA.types.find(t=>t.name===p.type)||{}).color || '#94a3b8';
-                wc.innerHTML += `
-                <div class="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
-                    <div class="w-3 h-3 rounded-full shadow-sm" style="background:${color}"></div>
-                    <div>
-                        <p class="text-sm font-bold text-slate-700 leading-tight">${p.name}</p>
-                        <p class="text-[10px] text-slate-500">${p.type} (${p.date})</p>
-                    </div>
-                </div>`;
+                wc.innerHTML += `<div class="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200"><div class="w-3 h-3 rounded-full shadow-sm" style="background:${color}"></div><div><p class="text-sm font-bold text-slate-700 leading-tight">${p.name}</p><p class="text-[10px] text-slate-500">${p.type} (${p.date})</p></div></div>`;
             });
 
             if(CHART.d) CHART.d.destroy(); CHART.d = new Chart(document.getElementById('chartDaily'), {type:'bar',data:{labels:Object.keys(res.daily),datasets:[{label:'คน',data:Object.values(res.daily),backgroundColor:'#6366f1',borderRadius:4}]}});
             if(CHART.t) CHART.t.destroy(); CHART.t = new Chart(document.getElementById('chartType'), {type:'doughnut',data:{labels:Object.keys(res.types),datasets:[{data:Object.values(res.types),backgroundColor:['#6366f1','#ec4899','#10b981','#f59e0b']}]}});
         }
 
-        // --- CALENDAR (Fixed Counts) ---
-        function loadCal(){
-            if(CAL){ CAL.refetchEvents(); return; }
+        async function loadCal(){
+            if(CAL) { CAL.destroy(); CAL=null; }
+            document.getElementById('loader').classList.remove('hidden');
+            
             CAL = new FullCalendar.Calendar(document.getElementById('calendar'), {
                 initialView:'dayGridMonth', locale:'th', height:'100%',
                 headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,listMonth' },
-                eventOrder: 'extendedProps.sortId', // Sort by ID from backend
+                dayMaxEventRows: false,
                 events: async(info, success) => {
-                    const leaves = await req({action:'calendar', start:info.startStr, end:info.endStr});
-                    
-                    // Logic Count: Key must be YYYY-MM-DD
-                    const counts = {};
-                    leaves.forEach(l => {
-                        const d = l.start; // Backend sends YYYY-MM-DD correctly now
-                        counts[d] = (counts[d] || 0) + 1;
-                    });
-                    
-                    const holidays = DATA.holidays.map(h => ({ title: `🛑 ${h.name}`, start: h.date, display: 'background', color:'#fee2e2' }));
-                    window.calendarCounts = counts; // Store globally
-                    success([...leaves, ...holidays]);
+                    try {
+                        const leaves = await req({action:'calendar', start:info.startStr, end:info.endStr});
+                        const counts = {};
+                        leaves.forEach(l => { counts[l.start] = (counts[l.start] || 0) + 1; });
+                        window.calendarCounts = counts; 
+                        const holidays = DATA.holidays.map(h => ({ title: `🛑 ${h.name}`, start: h.date, display: 'background', color:'#fee2e2' }));
+                        document.getElementById('loader').classList.add('hidden');
+                        success([...leaves, ...holidays]);
+                    } catch(e) { document.getElementById('loader').classList.add('hidden'); console.error(e); }
                 },
-                eventContent: arg => ({ html: arg.event.display==='background'?'':`<div class="px-1 truncate text-xs"><span class="w-1.5 h-1.5 inline-block rounded-full mr-1" style="background:${arg.event.backgroundColor}"></span>${arg.event.title}</div>` }),
+                eventContent: function(arg) {
+                    if (arg.event.display === 'background') return;
+                    const { type, note } = arg.event.extendedProps;
+                    return { html: `<div class="fc-event-main"><span class="evt-name">${arg.event.title}</span><span class="evt-type">${type}</span>${note ? `<span class="evt-note">${note}</span>` : ''}</div>` };
+                },
                 dayCellDidMount: (arg) => {
-                    const date = arg.date.toISOString().split('T')[0]; // Format YYYY-MM-DD
-                    // Check logic count
-                    if(window.calendarCounts && window.calendarCounts[date]) {
-                        const badge = document.createElement('div');
-                        badge.className = 'day-count-badge';
-                        badge.innerText = window.calendarCounts[date];
-                        const frame = arg.el.querySelector('.fc-daygrid-day-top');
-                        if(frame) frame.appendChild(badge);
-                    }
+                    // วิธีแก้ไข: สร้าง String YYYY-MM-DD จาก Local Date โดยตรง ไม่ผ่าน toISOString()
+                    const d = arg.date;
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    const dateStr = `${year}-${month}-${day}`;
+
+                    setTimeout(() => {
+                        // ใช้ dateStr ที่สร้างใหม่แทน
+                        if(window.calendarCounts && window.calendarCounts[dateStr]) {
+                            const badge = document.createElement('div');
+                            badge.className = 'day-count-badge';
+                            badge.innerText = window.calendarCounts[dateStr];
+                            
+                            const frame = arg.el.querySelector('.fc-daygrid-day-top');
+                            // เพิ่มเงื่อนไขป้องกันการสร้าง badge ซ้ำซ้อน
+                            if(frame && !frame.querySelector('.day-count-badge')) {
+                                frame.appendChild(badge);
+                            }
+                        }
+                    }, 50); // ลด delay ลงนิดหน่อยเพื่อให้รู้สึกเร็วขึ้น
                 }
             });
             CAL.render();
         }
 
-        // --- ACTIONS ---
+        // --- LINE CONNECTION ---
+        async function connectLine() {
+            if(!LIFF_ID) return Swal.fire('การเชื่อมต่อผ่าน line', 'อยู่ระหว่างการพัฒนา', 'info');
+            if(!liff.isLoggedIn()) { liff.login(); return; }
+            const profile = await liff.getProfile();
+            const res = await req({action:'regisLine', userId:USER.id, lineId:profile.userId}, true);
+            if(res.success) Swal.fire('สำเร็จ', 'เชื่อมต่อ LINE แล้ว', 'success');
+        }
+
+        // --- CORE ACTIONS ---
         document.getElementById('leaveForm').addEventListener('submit', async(e)=>{
             e.preventDefault();
             const res = await req({
@@ -377,7 +400,6 @@
             else Swal.fire('แจ้งเตือน',res.message,'warning');
         });
 
-        // --- HELPERS ---
         async function req(body, load=false){
             if(load) document.getElementById('loader').classList.remove('hidden');
             try {
