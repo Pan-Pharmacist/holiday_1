@@ -22,15 +22,36 @@
         .page-transition { animation: fadeUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* ปฏิทิน - ปรับเป็นโทนฟ้า */
-        .fc-event { border: none !important; border-radius: 6px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.08) !important; margin-bottom: 4px !important; overflow: hidden; transition: transform 0.2s; }
-        .fc-event:hover { transform: scale(1.02); }
-        .fc-event-main { padding: 4px 6px; overflow: hidden; color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.15); background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(0,0,0,0.05)); }
-        .evt-name { font-weight: 700; font-size: 0.85em; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .evt-type { font-size: 0.75em; opacity: 0.95; display: block; line-height: 1.2; margin-top: 1px; }
-        .evt-note { font-size: 0.7em; font-style: italic; opacity: 0.9; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; background: rgba(0,0,0,0.15); padding: 1px 4px; border-radius: 4px; }
+        /* --- ปฏิทินโฉมใหม่: สีฟ้าอ่อนละมุนตา --- */
+        .fc-event { 
+            border: 1px solid #bae6fd !important; 
+            border-radius: 6px !important; 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important; 
+            margin-bottom: 4px !important; 
+            overflow: hidden; 
+            transition: all 0.2s; 
+            background-color: #e0f2fe !important; /* ฟ้าอ่อนละมุนพื้นหลัง */
+        }
+        .fc-event:hover { 
+            transform: scale(1.02); 
+            box-shadow: 0 3px 6px rgba(0,0,0,0.08) !important; 
+            border-color: #7dd3fc !important; 
+            z-index: 10;
+        }
+        .fc-event-main { 
+            padding: 4px 6px; 
+            overflow: hidden; 
+            background: transparent !important;
+            color: #0369a1 !important; /* น้ำเงินเข้มอ่านง่าย */
+            text-shadow: none !important;
+        }
+        .evt-name { font-weight: 700; font-size: 0.85em; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #0284c7; }
+        .evt-type { font-size: 0.75em; opacity: 0.95; display: block; line-height: 1.2; margin-top: 1px; color: #0369a1; }
+        .evt-note { font-size: 0.7em; font-style: normal; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; background: rgba(255,255,255,0.7); padding: 1px 4px; border-radius: 4px; color: #075985; border: 1px solid rgba(255,255,255,0.5); }
+        .fc-day-today { background-color: #f0f9ff !important; }
         
-        .day-count-badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: white; border-radius: 99px; min-width: 20px; height: 20px; font-size: 0.75rem; display: flex; justify-content: center; align-items: center; font-weight: bold; padding: 0 4px; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.2); pointer-events: none; }
+        /* Badge แจ้งเตือนจำนวนคนลา */
+        .day-count-badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: white; border-radius: 99px; min-width: 20px; height: 20px; font-size: 0.75rem; display: flex; justify-content: center; align-items: center; font-weight: bold; padding: 0 4px; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.15); pointer-events: none; }
         .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.7); backdrop-filter: blur(4px); z-index: 9999; display: flex; justify-content: center; align-items: center; transition: opacity 0.3s; }
     </style>
 </head>
@@ -164,7 +185,7 @@
         <!-- History -->
         <div id="view-history" class="hidden page-transition max-w-5xl mx-auto">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-slate-800">ประวัติและเวรที่ลงไว้</h2>
+                <h2 class="text-2xl font-bold text-slate-800">ประวัติและเวรที่ลงไว้ทั้งหมด</h2>
                 <button onclick="window.print()" class="bg-slate-700 text-white px-4 py-2 rounded-lg hover:bg-slate-800 text-sm shadow transition"><i class="fa-solid fa-print mr-2"></i>พิมพ์รายงาน</button>
             </div>
             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
@@ -271,7 +292,8 @@
         const LIFF_ID = ''; 
 
         let USER=null, DATA=null, CAL=null, CHART={};
-        window.CURRENT_HISTORY = []; // ระบบแคชข้อมูลเพื่อความรวดเร็ว
+        window.CURRENT_HISTORY = []; 
+        let isHistLoaded = false; // ตัวแปรเช็คการโหลด Lazy Load
 
         // --- NETWORK WRAPPER ---
         async function req(body, silence = false){
@@ -314,7 +336,7 @@
             }
         });
 
-        // --- 3. แก้ไขความช้าด้วย Parallel Fetching (Promise.all) ---
+        // --- 1. เปลี่ยนโครงสร้างแก้ปัญหาความช้า (Lazy Loading) ---
         async function init(){
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('sidebar').classList.remove('hidden'); document.getElementById('sidebar').classList.add('flex');
@@ -329,23 +351,17 @@
                 if(USER.hasLine) document.getElementById('btnConnectLine').classList.add('hidden');
             }
 
-            // ตั้งค่า Dropdown เดือนล่วงหน้า
             const m = document.getElementById('dashMonth');
             ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'].forEach((x,i)=>m.innerHTML+=`<option value="${i+1}">${x}</option>`);
             m.value = new Date().getMonth()+1;
             
-            document.getElementById('loaderText').innerText = "กำลังซิงค์ข้อมูลทั้งหมด...";
+            document.getElementById('loaderText').innerText = "กำลังจัดเตรียมระบบ...";
             document.getElementById('loader').classList.remove('hidden');
             
-            // โหลดข้อมูล Init, Dashboard และ History พร้อมกันในรอบเดียว (Parallel)
-            const [initRes, dashRes, histRes] = await Promise.all([
-                req({action:'init'}, true),
-                req({action:'dashboard', month: m.value, year: new Date().getFullYear()}, true),
-                req({action:'myHistory', userId:USER.id}, true)
-            ]);
-
+            // โหลดแค่ข้อมูลตั้งต้น แล้วแสดง UI ทันที
+            const initRes = await req({action:'init'}, true);
             document.getElementById('loader').classList.add('hidden');
-            document.getElementById('loaderText').innerText = "กำลังประมวลผลข้อมูล..."; // reset
+            document.getElementById('loaderText').innerText = "กำลังประมวลผลข้อมูล..."; 
 
             if(initRes && initRes.users) { DATA=initRes; } 
             else { Swal.fire('เตือน', 'โหลดข้อมูลตั้งต้นไม่สมบูรณ์', 'warning'); return; }
@@ -355,10 +371,7 @@
             if(USER.role!=='admin'){ ph.value=USER.name; ph.disabled=true; }
             document.getElementById('inpType').innerHTML=initRes.types.map(t=>`<option value="${t.name}">${t.name}</option>`);
             
-            // Render Dashboard & History
-            renderDashboard(dashRes, histRes);
             nav('dashboard');
-            
             if(LIFF_ID) liff.init({ liffId: LIFF_ID });
         }
 
@@ -367,41 +380,49 @@
             event.currentTarget.classList.add('active');
             document.querySelectorAll('[id^="view-"]').forEach(v=>v.classList.add('hidden'));
             document.getElementById(`view-${id}`).classList.remove('hidden');
+            
             if(id==='calendar') loadCal();
             if(id==='history') loadHist(); 
+            if(id==='dashboard') loadDash();
         }
 
         async function loadDash(){
             document.getElementById('loader').classList.remove('hidden');
-            // เวลา Refresh ให้ดึงพร้อมกัน 2 ส่วน
-            const [dashRes, histRes] = await Promise.all([
-                req({action:'dashboard', month:document.getElementById('dashMonth').value, year:new Date().getFullYear()}, true),
-                req({action:'myHistory', userId:USER.id}, true)
-            ]);
+            const dashRes = await req({action:'dashboard', month:document.getElementById('dashMonth').value, year:new Date().getFullYear()}, true);
+            
+            // ดึงข้อมูลสถิติของตัวเองแบบไม่ให้บล็อคหน้าจอ
+            if(!isHistLoaded) fetchHistoryStatsSilently();
+            else updateDashboardStats();
+            
             document.getElementById('loader').classList.add('hidden');
-            renderDashboard(dashRes, histRes);
+            renderDashboard(dashRes);
         }
 
-        // --- Render UI logic (แยกออกมาเพื่อรองรับ Parallel Load) ---
-        function renderDashboard(dashRes, histRes) {
-            // Update History Data
-            const res = Array.isArray(histRes) ? histRes : [];
-            window.CURRENT_HISTORY = res; // เก็บลง Cache
-            
-            const used = res.length;
+        async function fetchHistoryStatsSilently() {
+            const histRes = await req({action:'myHistory', userId:USER.id}, true);
+            window.CURRENT_HISTORY = Array.isArray(histRes) ? histRes : [];
+            isHistLoaded = true;
+            updateDashboardStats();
+        }
+
+        function updateDashboardStats() {
+            const used = window.CURRENT_HISTORY.length;
             const lim = (DATA && DATA.userLimit) ? DATA.userLimit : 15;
-            document.getElementById('statPersonal').innerText = used;
-            document.getElementById('statLimit').innerText = `/${lim} วัน`;
-            document.getElementById('statBar').style.width = Math.min((used/lim)*100, 100) + '%';
-            
-            // Update Dashboard Data
+            const statPersonal = document.getElementById('statPersonal');
+            if(statPersonal) statPersonal.innerText = used;
+            const statLimit = document.getElementById('statLimit');
+            if(statLimit) statLimit.innerText = `/${lim} วัน`;
+            const statBar = document.getElementById('statBar');
+            if(statBar) statBar.style.width = Math.min((used/lim)*100, 100) + '%';
+        }
+
+        function renderDashboard(dashRes) {
             const wc = document.getElementById('whoOffContainer');
             wc.innerHTML = (dashRes && dashRes.whoOff && dashRes.whoOff.length) ? '' : '<p class="text-slate-400 text-sm italic py-2">ไม่มีข้อมูลเภสัชกรที่ลาในวันนี้และพรุ่งนี้</p>';
             
             if(dashRes && dashRes.whoOff) {
                 dashRes.whoOff.forEach(p => {
                     const colorObj = DATA.types.find(t=>t.name===p.type);
-                    // ปรับสี default ให้เป็นฟ้าสวยงาม
                     let color = colorObj ? colorObj.color : '#0ea5e9';
                     if(!color || color === '#999' || color === '#94a3b8' || color === '#6366f1') color = '#0ea5e9';
                     
@@ -418,9 +439,17 @@
             } else { if(CHART.t) CHART.t.destroy(); }
         }
 
-        // --- 1. ปรับตารางประวัติ (มีเวรไหนบ้าง) และปุ่มลบให้เด่นชัด ---
-        function loadHist(){
-            // นำ Cache มาใช้ ทำให้เปิดหน้าต่างปุ๊บข้อมูลมาปั๊บ
+        // --- ระบบ History แบบ Lazy Load ---
+        async function loadHist(){
+            if(!isHistLoaded) {
+                document.getElementById('loader').classList.remove('hidden');
+                await fetchHistoryStatsSilently();
+                document.getElementById('loader').classList.add('hidden');
+            }
+            renderHistUI();
+        }
+
+        function renderHistUI() {
             const res = window.CURRENT_HISTORY;
             const tb = document.getElementById('histBody'); 
             
@@ -448,14 +477,17 @@
                 document.getElementById('loader').classList.remove('hidden');
                 await req({action:'delete', id, userId:USER.id}, true); 
                 
-                // โหลดข้อมูล Dashboard และ History ใหม่มาอัปเดตแคช
-                await loadDash(); 
-                loadHist(); // รีเฟรชหน้าประวัติ
+                isHistLoaded = false; // สั่งเคลียร์แคช
+                await fetchHistoryStatsSilently(); // โหลดใหม่
+                renderHistUI(); // รีเฟรชตาราง
+                if(document.getElementById('view-dashboard').classList.contains('hidden') === false) loadDash();
+                
+                document.getElementById('loader').classList.add('hidden');
                 Swal.fire('สำเร็จ','ยกเลิกวันลาเรียบร้อยแล้ว','success');
             } 
         }
 
-        // --- 2. เปลี่ยนสีปฏิทินเป็นโทนฟ้า ---
+        // --- 2. เปลี่ยนสีปฏิทินเป็น "ฟ้าอ่อนละมุน" (ถูกบังคับผ่าน CSS ด้านบนแล้ว) ---
         async function loadCal(){
             if(CAL) { CAL.destroy(); CAL=null; }
             document.getElementById('loader').classList.remove('hidden');
@@ -482,11 +514,7 @@
                             dayGroups[date].sort((a, b) => (a.extendedProps.sortId || 0) - (b.extendedProps.sortId || 0));
                             dayGroups[date].forEach((l, index) => {
                                 l.title = `${index + 1}. ${l.title}`; 
-                                
-                                // ตั้งค่าสีเป็น Sky Blue แทนสีเทา
-                                if (!l.color || l.color === '#999' || l.color === '#94a3b8' || l.color === '#6366f1') {
-                                    l.color = '#0ea5e9'; // ฟ้าสวยงาม
-                                }
+                                // ระบบสีถูกคุมด้วย CSS ด้านบนแล้ว ทำให้สีออกมาละมุนเสมอ
                                 processedLeaves.push(l);
                             });
                             counts[date] = dayGroups[date].length;
@@ -505,7 +533,8 @@
                 eventContent: function(arg) {
                     if (arg.event.display === 'background') return;
                     const { type, note } = arg.event.extendedProps;
-                    return { html: `<div class="fc-event-main"><span class="evt-name drop-shadow-sm">${arg.event.title}</span><span class="evt-type">${type}</span>${note ? `<span class="evt-note shadow-sm">${note}</span>` : ''}</div>` };
+                    // โครงสร้างกล่องสวยงามสำหรับหน้าปฏิทิน
+                    return { html: `<div class="fc-event-main"><span class="evt-name">${arg.event.title}</span><span class="evt-type">${type}</span>${note ? `<span class="evt-note shadow-sm">${note}</span>` : ''}</div>` };
                 },
                 dayCellDidMount: (arg) => {
                     const d = arg.date;
@@ -535,7 +564,12 @@
                 note:document.getElementById('inpNote').value, start:document.getElementById('inpStart').value, end:document.getElementById('inpEnd').value,
                 userId:USER.id, role:USER.role
             });
-            if(res.success){ Swal.fire('สำเร็จ',res.message,'success'); document.getElementById('inpNote').value=''; document.getElementById('inpStart').value=''; document.getElementById('inpEnd').value=''; loadDash(); }
+            if(res.success){ 
+                Swal.fire('สำเร็จ',res.message,'success'); 
+                document.getElementById('inpNote').value=''; document.getElementById('inpStart').value=''; document.getElementById('inpEnd').value=''; 
+                isHistLoaded = false; // เคลียร์แคชให้โหลดใหม่
+                loadDash(); 
+            }
             else Swal.fire('แจ้งเตือน',res.message || 'เกิดข้อผิดพลาด','warning');
         });
 
