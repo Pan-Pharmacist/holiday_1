@@ -48,16 +48,13 @@
         
         .fc-day-today { background-color: #f0f9ff !important; }
         
-        /* Badge สำหรับยอดรวมวัน */
         .day-count-badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: white; border-radius: 99px; min-width: 20px; height: 20px; font-size: 0.75rem; display: flex; justify-content: center; align-items: center; font-weight: bold; padding: 0 4px; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.1); pointer-events: none; }
         
-        /* Loader เต็มจอ (ใช้ตอนแรกเท่านั้น) */
         .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.7); backdrop-filter: blur(4px); z-index: 9999; display: flex; justify-content: center; align-items: center; transition: opacity 0.3s; }
     </style>
 </head>
 <body class="overflow-hidden h-screen w-screen flex text-slate-700 relative">
 
-    <!-- แถบแจ้งเตือนการดึงข้อมูลเบื้องหลัง (Silent Sync Indicator) -->
     <div id="syncIndicator" class="fixed top-4 right-4 bg-sky-100/90 backdrop-blur text-sky-700 px-4 py-2 rounded-full text-xs font-bold shadow-sm z-[100] flex items-center gap-2 transform translate-y-[-150%] transition-transform duration-300 border border-sky-200">
         <i class="fa-solid fa-rotate fa-spin"></i> กำลังอัปเดตข้อมูล...
     </div>
@@ -85,16 +82,16 @@
             <div><h2 class="font-bold text-slate-800 leading-tight">ข้อมูลวันลา<br>เภสัชกร</h2></div>
         </div>
         <div class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-            <button onclick="nav('dashboard')" class="nav-item active w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-slate-500 hover:bg-slate-50 transition"><i class="fa-solid fa-chart-pie w-5"></i> กระดานข้อมูล</button>
-            <button onclick="nav('form')" class="nav-item w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-slate-500 hover:bg-slate-50 transition"><i class="fa-solid fa-file-pen w-5"></i> ลงบันทึกวันลา</button>
-            <button onclick="nav('calendar')" class="nav-item w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-slate-500 hover:bg-slate-50 transition"><i class="fa-regular fa-calendar-days w-5"></i> ปฏิทินวันลา</button>
-            <button onclick="nav('history')" class="nav-item w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-slate-500 hover:bg-slate-50 transition"><i class="fa-solid fa-clipboard-list w-5"></i> ประวัติและวันลาของฉัน</button>
+            <button onclick="nav('dashboard', this)" class="nav-item active w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-slate-500 hover:bg-slate-50 transition"><i class="fa-solid fa-chart-pie w-5"></i> กระดานข้อมูล</button>
+            <button onclick="nav('form', this)" class="nav-item w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-slate-500 hover:bg-slate-50 transition"><i class="fa-solid fa-file-pen w-5"></i> ลงบันทึกวันลา</button>
+            <button onclick="nav('calendar', this)" class="nav-item w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-slate-500 hover:bg-slate-50 transition"><i class="fa-regular fa-calendar-days w-5"></i> ปฏิทินวันลา</button>
+            <button onclick="nav('history', this)" class="nav-item w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-slate-500 hover:bg-slate-50 transition"><i class="fa-solid fa-clipboard-list w-5"></i> ประวัติและวันลาของฉัน</button>
             
             <div id="adminMenu" class="hidden pt-6 mt-4 border-t border-slate-100">
                 <p class="px-4 text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-widest">Admin Control</p>
-                <button onclick="nav('adminQuota')" class="nav-item w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-purple-600 hover:bg-purple-50"><i class="fa-solid fa-lock w-5"></i> โควต้า & วันหยุด</button>
-                <button onclick="nav('adminReport')" class="nav-item w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-purple-600 hover:bg-purple-50"><i class="fa-solid fa-file-csv w-5"></i> รายงาน & Logs</button>
-                <button onclick="nav('adminUsers')" class="nav-item w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-purple-600 hover:bg-purple-50"><i class="fa-solid fa-users-gear w-5"></i> จัดการผู้ใช้</button>
+                <button onclick="nav('adminQuota', this)" class="nav-item w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-purple-600 hover:bg-purple-50"><i class="fa-solid fa-lock w-5"></i> โควต้า & วันหยุด</button>
+                <button onclick="nav('adminReport', this)" class="nav-item w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-purple-600 hover:bg-purple-50"><i class="fa-solid fa-file-csv w-5"></i> รายงาน & Logs</button>
+                <button onclick="nav('adminUsers', this)" class="nav-item w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 text-purple-600 hover:bg-purple-50"><i class="fa-solid fa-users-gear w-5"></i> จัดการผู้ใช้</button>
             </div>
         </div>
         <div class="p-4 border-t border-slate-100">
@@ -113,7 +110,7 @@
 
     <!-- Main Content -->
     <main id="main" class="flex-1 h-full overflow-y-auto p-6 hidden bg-[#f8fafc]">
-        <!-- Initial Loader สำหรับครั้งแรกเท่านั้น -->
+        <!-- Initial Loader -->
         <div id="loader" class="loading-overlay hidden">
             <div class="flex flex-col items-center bg-white/80 p-8 rounded-3xl shadow-2xl backdrop-blur-md border border-white">
                 <div class="animate-spin rounded-full h-12 w-12 border-4 border-sky-100 border-t-sky-500 mb-4"></div>
@@ -211,7 +208,7 @@
             </div>
         </div>
 
-        <!-- Admin Views... (ส่วน Admin โค้ดเดิมไม่เปลี่ยนแปลง) -->
+        <!-- Admin Views... -->
         <div id="view-adminQuota" class="hidden page-transition max-w-4xl mx-auto space-y-6">
             <div class="bg-white p-8 rounded-3xl shadow-sm border border-orange-100 relative overflow-hidden">
                 <div class="absolute left-0 top-0 h-full w-1.5 bg-orange-400"></div>
@@ -299,55 +296,70 @@
     </div>
 
     <script>
-        const API = 'https://script.google.com/macros/s/AKfycbyg3POoYEYXE_LEdPcRqWFYctAxkfZnI8LQVWTWTAr-jTP8W5tIH0qEaeBIRJtLpFBUug/exec'; 
+        const API = 'https://script.google.com/macros/s/AKfycbwY9wLYSoryBmaEV8ZFgkNJ2CMDBetEU_rJs2IBwjvhc0xw8R4w8p1pi09h34WGVDsRwg/exec'; 
         const LIFF_ID = ''; 
 
         let USER=null, DATA=null, CAL=null, CHART={};
         
-        // 🚀 SMART STATE MANAGEMENT (แก้ปัญหาอาการค้าง)
-        window.APP_STATE = { 
-            dash: null, 
-            hist: null, 
-            isSyncing: false 
-        };
+        window.APP_STATE = { dash: null, hist: null, isSyncing: false };
 
-        // แสดง/ซ่อน แถบซิงค์ข้อมูล (เพื่อไม่ให้บล็อคหน้าจอผู้ใช้)
         function toggleSync(show) {
             const el = document.getElementById('syncIndicator');
             if(show) { APP_STATE.isSyncing = true; el.classList.remove('translate-y-[-150%]'); }
             else { APP_STATE.isSyncing = false; el.classList.add('translate-y-[-150%]'); }
         }
 
-        // --- NETWORK WRAPPER (ปรับแต่งไม่ให้ดึงพร้อมกันจนค้าง) ---
-        async function req(body, silent = false){
-            if(!silent) {
-                document.getElementById('loader').classList.remove('hidden');
-            } else {
-                toggleSync(true);
-            }
+        // --- 🚀 การดักจับ ERROR แบบสมบูรณ์แบบ (ตามที่คุณแนะนำ) ---
+        async function req(body, silent = false) {
+            const loader = document.getElementById('loader');
+            
+            if (!silent) loader?.classList.remove('hidden');
+            else toggleSync(true);
 
             try {
-                const r = await fetch(API, {
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(body)
-                });
-                const text = await r.text();
-                
-                if(!silent) document.getElementById('loader').classList.add('hidden');
-                else toggleSync(false);
-                
-                try {
-                    const data = JSON.parse(text);
-                    if (data.error) return { success: false, message: data.error };
-                    return data;
-                } catch(err) {
-                    return { success: false, message: 'Server Process Error' };
+                if (!API || !API.endsWith('/exec')) {
+                    throw new Error('API URL ไม่ถูกต้อง');
                 }
-            } catch(e){
-                if(!silent) document.getElementById('loader').classList.add('hidden');
+
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 20000); // 20 วิ Timeout
+
+                const response = await fetch(API, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(body),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeout);
+                const text = await response.text();
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${text.slice(0, 200)}`);
+                }
+
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    throw new Error('Server ส่งข้อมูลไม่ใช่ JSON: ' + text.slice(0, 200));
+                }
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                return data;
+
+            } catch (e) {
+                console.error('API Error:', { action: body.action, message: e.message });
+                return {
+                    success: false,
+                    error: true,
+                    message: e.name === 'AbortError' ? 'เชื่อมต่อหมดเวลา กรุณาลองใหม่' : e.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ'
+                };
+            } finally {
+                if (!silent) loader?.classList.add('hidden');
                 else toggleSync(false);
-                return { success: false, message: 'Connection Error' };
             }
         }
 
@@ -368,11 +380,9 @@
             }
         });
 
-        // --- โหลดระบบครั้งแรก ---
         async function initApp(){
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('sidebar').classList.remove('hidden'); document.getElementById('sidebar').classList.add('flex');
-            
             document.getElementById('uName').innerText = USER.name; 
             document.getElementById('avt').innerText = USER.name[0];
             
@@ -388,10 +398,9 @@
             
             document.getElementById('loaderText').innerText = "กำลังจัดเตรียมระบบ...";
             
-            // ดึงเฉพาะข้อมูลตั้งต้นให้หน้าจอพร้อมใช้งานทันที (แก้ปัญหาคอขวด)
             const initRes = await req({action:'init'});
             if(initRes && initRes.users) { DATA=initRes; } 
-            else { Swal.fire('เตือน', 'โหลดข้อมูลตั้งต้นไม่สมบูรณ์', 'warning'); return; }
+            else { Swal.fire('เตือน', 'โหลดข้อมูลตั้งต้นไม่สมบูรณ์ หรือขาดการเชื่อมต่อ', 'warning'); return; }
             
             const ph = document.getElementById('inpPh');
             ph.innerHTML='<option value="">-- เลือก --</option>'+initRes.users.map(u=>`<option value="${u.name}">${u.name}</option>`);
@@ -400,101 +409,106 @@
             
             document.getElementById('main').classList.remove('hidden');
             
-            // นำทางไปหน้า Dashboard แบบเรียกโหลดเบื้องหลัง
-            nav('dashboard');
-            
+            // เรียกใช้ฟังก์ชัน nav() โดยไม่ให้บั๊ก event
+            nav('dashboard', null);
             if(LIFF_ID) liff.init({ liffId: LIFF_ID });
         }
 
-        // --- ระบบสลับหน้าแบบไร้รอยต่อ (0 Lag) ---
-        function nav(id){
-            document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
-            if(event && event.currentTarget) event.currentTarget.classList.add('active');
-            else document.querySelector(`.nav-item[onclick="nav('${id}')"]`).classList.add('active');
+        // --- 🚀 ฟังก์ชันเปลี่ยนหน้าอัปเกรดความปลอดภัยตามแนะนำ ---
+        function nav(id, clickedButton = null) {
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
 
-            document.querySelectorAll('[id^="view-"]').forEach(v=>v.classList.add('hidden'));
-            document.getElementById(`view-${id}`).classList.remove('hidden');
-            
-            // โหลดข้อมูลเฉพาะหน้าตัวเอง (Lazy Load) แบบ Silent Sync
-            if(id==='dashboard') loadDashView(false);
-            if(id==='calendar') loadCalView();
-            if(id==='history') loadHistView(false); 
+            if (clickedButton) {
+                clickedButton.classList.add('active');
+            } else {
+                // อัปเดต Selector ให้รองรับการใส่ this ใน DOM
+                const button = document.querySelector(`.nav-item[onclick*="nav('${id}'"]`);
+                if (button) button.classList.add('active');
+            }
+
+            document.querySelectorAll('[id^="view-"]').forEach(v => v.classList.add('hidden'));
+
+            const view = document.getElementById(`view-${id}`);
+            if (!view) {
+                console.error('View not found:', id);
+                return;
+            }
+            view.classList.remove('hidden');
+
+            if (id === 'dashboard') loadDashView(false);
+            if (id === 'calendar') loadCalView();
+            if (id === 'history') loadHistView(false);
         }
 
-        // --- ระบบอัปเดต DASHBOARD แบบเนียนๆ ---
         async function loadDashView(forceRefresh = false) {
-            // ถ้ามีของเก่าให้โชว์ทันที
             if(APP_STATE.dash) renderDashboardUI();
             if(APP_STATE.hist) renderDashStatsOnly();
             
-            // หากเป็นการโหลดครั้งแรก หรือกดบังคับ Refresh ให้ดึงใหม่จากหลังบ้าน
             if(!APP_STATE.dash || forceRefresh) {
-                const isSilent = !!APP_STATE.dash; // ถ้ามีแคชแล้ว ดึงแบบเงียบ
+                const isSilent = !!APP_STATE.dash;
                 const dashRes = await req({action:'dashboard', month:document.getElementById('dashMonth').value, year:new Date().getFullYear()}, isSilent);
-                APP_STATE.dash = dashRes;
-                renderDashboardUI();
+                if(dashRes && !dashRes.error) {
+                    APP_STATE.dash = dashRes;
+                    renderDashboardUI();
+                }
             }
             
-            // ดึงสถิติยอดการใช้ส่วนตัว (History) หากยังไม่มี
             if(!APP_STATE.hist || forceRefresh) {
-                const histRes = await req({action:'myHistory', userId:USER.id}, true); // Silent
-                APP_STATE.hist = Array.isArray(histRes) ? histRes : [];
-                renderDashStatsOnly();
+                const histRes = await req({action:'myHistory', userId:USER.id}, true); 
+                if(histRes && !histRes.error) {
+                    APP_STATE.hist = Array.isArray(histRes) ? histRes : [];
+                    renderDashStatsOnly();
+                }
             }
         }
 
         function renderDashboardUI() {
             const dashRes = APP_STATE.dash;
             if(!dashRes) return;
-
             const wc = document.getElementById('whoOffContainer');
             wc.innerHTML = (dashRes.whoOff && dashRes.whoOff.length) ? '' : '<p class="text-slate-400 text-sm italic py-2">ไม่มีข้อมูลเภสัชกรที่ลาในวันนี้และพรุ่งนี้</p>';
-            
             if(dashRes.whoOff) {
                 dashRes.whoOff.forEach(p => {
-                    // กำหนดสีฟ้าเป็น Default 
                     let color = '#0ea5e9'; 
                     wc.innerHTML += `<div class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-sky-100 shadow-sm transition hover:shadow"><div class="w-3.5 h-3.5 rounded-full shadow-sm" style="background:${color}"></div><div><p class="text-sm font-bold text-slate-700 leading-tight">${p.name}</p><p class="text-[10.5px] text-slate-500 font-medium">${p.type} <span class="text-sky-500">• ${p.date}</span></p></div></div>`;
                 });
             }
-
             if(dashRes.daily && Object.keys(dashRes.daily).length) {
                 if(CHART.d) CHART.d.destroy(); CHART.d = new Chart(document.getElementById('chartDaily'), {type:'bar',data:{labels:Object.keys(dashRes.daily),datasets:[{label:'จำนวนคน',data:Object.values(dashRes.daily),backgroundColor:'#0ea5e9',borderRadius:4}]}});
             } else { if(CHART.d) CHART.d.destroy(); }
-            
             if(dashRes.types && Object.keys(dashRes.types).length) {
                 if(CHART.t) CHART.t.destroy(); CHART.t = new Chart(document.getElementById('chartType'), {type:'doughnut',data:{labels:Object.keys(dashRes.types),datasets:[{data:Object.values(dashRes.types),backgroundColor:['#0ea5e9','#ec4899','#10b981','#f59e0b','#8b5cf6']}]}});
             } else { if(CHART.t) CHART.t.destroy(); }
         }
 
         function renderDashStatsOnly() {
-            const used = APP_STATE.hist.length;
+            if(!APP_STATE.hist) return;
+            // คำนวณเฉพาะรายการที่นับโควต้า (สำหรับ Dashboard)
+            const used = APP_STATE.hist.length; 
             const lim = (DATA && DATA.userLimit) ? DATA.userLimit : 15;
             document.getElementById('statPersonal').innerText = used;
             document.getElementById('statLimit').innerText = `/${lim} วัน`;
             document.getElementById('statBar').style.width = Math.min((used/lim)*100, 100) + '%';
         }
 
-        // --- ระบบอัปเดต HISTORY (เปิดแล้วเด้งปั๊บ) ---
         async function loadHistView(forceRefresh = false) {
-            // โชว์ของเก่าทันทีก่อนอัปเดต
             if(APP_STATE.hist) renderHistUI();
-
             if(!APP_STATE.hist || forceRefresh) {
                 const isSilent = !!APP_STATE.hist;
                 const histRes = await req({action:'myHistory', userId:USER.id}, isSilent);
-                APP_STATE.hist = Array.isArray(histRes) ? histRes : [];
-                renderHistUI();
-                renderDashStatsOnly(); // อัปเดตที่หน้า Dash ด้วย
+                if(histRes && !histRes.error) {
+                    APP_STATE.hist = Array.isArray(histRes) ? histRes : [];
+                    renderHistUI();
+                    renderDashStatsOnly();
+                }
             }
         }
 
         function renderHistUI() {
             const res = APP_STATE.hist;
+            if(!res) return;
             const tb = document.getElementById('histBody'); 
-            
             tb.innerHTML = res.length ? '' : '<tr><td colspan="4" class="p-12 text-center text-slate-400"><i class="fa-regular fa-folder-open text-5xl mb-4 block opacity-40"></i>ท่านยังไม่มีประวัติการลงวันลาในระบบ</td></tr>';
-            
             res.forEach(r=>{
                 tb.innerHTML+=`<tr class="border-b hover:bg-slate-50 transition">
                     <td class="p-4"><span class="font-bold text-slate-700 block"><i class="fa-regular fa-calendar text-sky-500 mr-2"></i>${r.date}</span></td>
@@ -507,29 +521,25 @@
                     </td>
                 </tr>`;
             });
-            
             document.getElementById('pName').innerText = USER.name;
             document.getElementById('pBody').innerHTML = res.map(r=>`<tr><td class="border border-black p-2">${r.date}</td><td class="border border-black p-2">${r.type}</td><td class="border border-black p-2">${r.note||'-'}</td></tr>`).join('');
         }
 
         async function del(id){ 
             if(await Swal.fire({title:'ยืนยันการยกเลิก?',text:'ระบบจะลบข้อมูลการลาในวันนี้ของท่านออก',icon:'warning',showCancelButton:true,confirmButtonColor:'#ef4444',cancelButtonText:'ปิด'}).then(r=>r.isConfirmed)){ 
-                document.getElementById('loader').classList.remove('hidden');
-                await req({action:'delete', id, userId:USER.id}); 
-                
-                // ล้างแคชเพื่อให้ดึงใหม่เสมอ
-                APP_STATE.dash = null; 
-                APP_STATE.hist = null;
-                
-                loadHistView(true); // บังคับรีเฟรชประวัติ
-                Swal.fire('สำเร็จ','ยกเลิกวันลาเรียบร้อยแล้ว','success');
+                const res = await req({action:'delete', id, userId:USER.id}); 
+                if(res && res.success) {
+                    APP_STATE.dash = null; APP_STATE.hist = null;
+                    loadHistView(true);
+                    Swal.fire('สำเร็จ','ยกเลิกวันลาเรียบร้อยแล้ว','success');
+                } else {
+                    Swal.fire('ล้มเหลว', res.message || 'ไม่สามารถยกเลิกข้อมูลได้', 'error');
+                }
             } 
         }
 
-        // --- 🎨 ระบบปฏิทิน: สีฟ้าละมุน 100% ---
         async function loadCalView(){
             if(CAL) { CAL.destroy(); CAL=null; }
-            
             CAL = new FullCalendar.Calendar(document.getElementById('calendar'), {
                 initialView:'dayGridMonth', locale:'th', height:'100%',
                 weekends: false, 
@@ -537,7 +547,7 @@
                 dayMaxEventRows: false,
                 events: async(info, success) => {
                     try {
-                        const leaves = await req({action:'calendar', start:info.startStr, end:info.endStr}, true); // Silent
+                        const leaves = await req({action:'calendar', start:info.startStr, end:info.endStr}, true);
                         if(!Array.isArray(leaves)) return success([]); 
                         
                         const dayGroups = {};
@@ -551,7 +561,6 @@
                         for (let date in dayGroups) {
                             dayGroups[date].sort((a, b) => (a.extendedProps.sortId || 0) - (b.extendedProps.sortId || 0));
                             dayGroups[date].forEach((l, index) => {
-                                // บังคับสีฟ้าอ่อนละมุนตา สำหรับวันลาทั้งหมด
                                 l.title = `${index + 1}. ${l.title}`; 
                                 l.backgroundColor = '#e0f2fe'; 
                                 l.borderColor = '#bae6fd';
@@ -566,20 +575,17 @@
                         if(DATA && DATA.holidays) {
                             hols = DATA.holidays.map(h => ({ title: `🛑 ${h.name}`, start: h.date, display: 'background', color:'#fee2e2' }));
                         }
-                        
                         success([...processedLeaves, ...hols]);
                     } catch(e) { console.error(e); success([]); }
                 },
                 eventContent: function(arg) {
                     if (arg.event.display === 'background') return;
                     const { type, note } = arg.event.extendedProps;
-                    // สร้างบล็อกที่ดูคลีน สะอาด และพรีเมียม
                     return { html: `<div class="fc-event-main"><span class="evt-name">${arg.event.title}</span><span class="evt-type">${type}</span>${note ? `<span class="evt-note">${note}</span>` : ''}</div>` };
                 },
                 dayCellDidMount: (arg) => {
                     const d = arg.date;
                     const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-
                     setTimeout(() => {
                         if(window.calendarCounts && window.calendarCounts[dateStr]) {
                             const frame = arg.el.querySelector('.fc-daygrid-day-top');
@@ -596,7 +602,6 @@
             CAL.render();
         }
 
-        // --- SUBMIT LEAVE ---
         document.getElementById('leaveForm').addEventListener('submit', async(e)=>{
             e.preventDefault();
             const res = await req({
@@ -604,19 +609,15 @@
                 note:document.getElementById('inpNote').value, start:document.getElementById('inpStart').value, end:document.getElementById('inpEnd').value,
                 userId:USER.id, role:USER.role
             });
-            if(res.success){ 
+            if(res && res.success){ 
                 Swal.fire('สำเร็จ',res.message,'success'); 
                 document.getElementById('inpNote').value=''; document.getElementById('inpStart').value=''; document.getElementById('inpEnd').value=''; 
-                
-                // ล้างแคชเพื่อให้ดึงใหม่
                 APP_STATE.dash = null; APP_STATE.hist = null;
-                // สลับกลับไปหน้า Dash
-                nav('dashboard'); 
+                nav('dashboard', null); 
             }
             else Swal.fire('แจ้งเตือน',res.message || 'เกิดข้อผิดพลาด','warning');
         });
 
-        // --- LINE CONNECTION ---
         async function connectLine() {
             if(!LIFF_ID) return Swal.fire('ข้อมูลเพิ่มเติม', 'ระบบแจ้งเตือน Line อยู่ระหว่างการเตรียมเชื่อมต่อ', 'info');
             if(!liff.isLoggedIn()) { liff.login(); return; }
@@ -625,7 +626,6 @@
             if(res.success) Swal.fire('สำเร็จ', 'เชื่อมต่อระบบ LINE แล้ว', 'success');
         }
 
-        // --- UTILS ---
         function togglePassModal(){ document.getElementById('passModal').classList.toggle('hidden'); }
         function logout(){ location.reload(); }
         async function changePass(){
@@ -635,8 +635,13 @@
             if(res.success){ Swal.fire('สำเร็จ','เปลี่ยนรหัสผ่านเรียบร้อยแล้ว','success'); togglePassModal(); document.getElementById('oldPass').value=''; document.getElementById('newPass').value=''; } else Swal.fire('ผิดพลาด',res.message,'error');
         }
         
-        // --- ADMIN FUNCTIONS ---
-        async function setLock(rst=false){ const d=document.getElementById('admDate').value, q=document.getElementById('admQ').value; if(!d) return; await req({action:'setLock', date:d, quota:rst?null:q, userId:USER.id}); Swal.fire('เสร็จสิ้น','บันทึกการปรับโควต้าแล้ว','success'); }
+        async function setLock(rst=false){ 
+            const d=document.getElementById('admDate').value, q=document.getElementById('admQ').value; 
+            if(!d) return; 
+            const res = await req({action:'setLock', date:d, quota:rst?null:q, userId:USER.id}); 
+            if(res.success) Swal.fire('เสร็จสิ้น', res.message || 'บันทึกการปรับโควต้าแล้ว','success');
+            else Swal.fire('ล้มเหลว', res.message || 'ไม่สามารถอัปเดตได้', 'error');
+        }
         async function addHoliday(){ const d=document.getElementById('holDate').value, n=document.getElementById('holName').value; if(!d||!n) return; await req({action:'addHoliday', date:d, name:n, userId:USER.id}); Swal.fire('เสร็จสิ้น','บันทึกวันหยุดแล้ว','success'); document.getElementById('holDate').value=''; document.getElementById('holName').value=''; }
         async function loadReport(){ 
             const s=document.getElementById('repS').value, e=document.getElementById('repE').value; 
