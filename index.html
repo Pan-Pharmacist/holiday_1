@@ -47,14 +47,31 @@
         .evt-note { font-size: 0.7em; font-style: normal; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 3px; background: rgba(255,255,255,0.65); padding: 2px 4px; border-radius: 4px; color: #075985; border: 1px solid rgba(255,255,255,0.7); }
         
         .fc-day-today { background-color: #f0f9ff !important; }
+
+        /* --- วันเสาร์-อาทิตย์: พื้นหลังสีเทาอ่อน --- */
+        .fc-day-sat, .fc-day-sun { background-color: #f1f5f9 !important; }
+        .fc-day-sat .fc-daygrid-day-number, .fc-day-sun .fc-daygrid-day-number { color: #64748b !important; font-weight: bold; }
+
+        /* --- วันหยุดนักขัตฤกษ์: ป้ายสีแดงโดดเด่น --- */
+        .holiday-evt {
+            background-color: #fee2e2 !important; /* red-100 */
+            border-color: #fca5a5 !important; /* red-300 */
+            box-shadow: none !important;
+            cursor: default !important;
+            opacity: 0.95;
+        }
+        .holiday-evt:hover { transform: none !important; box-shadow: none !important; z-index: 1; opacity: 1; }
         
+        /* Badge สำหรับยอดรวมวัน */
         .day-count-badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: white; border-radius: 99px; min-width: 20px; height: 20px; font-size: 0.75rem; display: flex; justify-content: center; align-items: center; font-weight: bold; padding: 0 4px; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.1); pointer-events: none; }
         
+        /* Loader เต็มจอ */
         .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.7); backdrop-filter: blur(4px); z-index: 9999; display: flex; justify-content: center; align-items: center; transition: opacity 0.3s; }
     </style>
 </head>
 <body class="overflow-hidden h-screen w-screen flex text-slate-700 relative">
 
+    <!-- แถบแจ้งเตือนการดึงข้อมูลเบื้องหลัง (Silent Sync Indicator) -->
     <div id="syncIndicator" class="fixed top-4 right-4 bg-sky-100/90 backdrop-blur text-sky-700 px-4 py-2 rounded-full text-xs font-bold shadow-sm z-[100] flex items-center gap-2 transform translate-y-[-150%] transition-transform duration-300 border border-sky-200">
         <i class="fa-solid fa-rotate fa-spin"></i> กำลังอัปเดตข้อมูล...
     </div>
@@ -208,7 +225,7 @@
             </div>
         </div>
 
-        <!-- Admin Views... -->
+        <!-- Admin Views -->
         <div id="view-adminQuota" class="hidden page-transition max-w-4xl mx-auto space-y-6">
             <div class="bg-white p-8 rounded-3xl shadow-sm border border-orange-100 relative overflow-hidden">
                 <div class="absolute left-0 top-0 h-full w-1.5 bg-orange-400"></div>
@@ -225,7 +242,7 @@
                 <h2 class="text-xl font-bold mb-6 text-slate-800">📅 เพิ่มวันหยุดนักขัตฤกษ์</h2>
                 <div class="flex gap-4 items-end">
                     <div class="w-1/3"><label class="text-xs font-bold text-slate-400 block mb-1">วันที่</label><input type="date" id="holDate" class="border rounded-lg p-3 w-full bg-slate-50 outline-none"></div>
-                    <div class="flex-1"><label class="text-xs font-bold text-slate-400 block mb-1">ชื่อวันหยุด</label><input type="text" id="holName" placeholder="ชื่อวันหยุด" class="border rounded-lg p-3 w-full bg-slate-50 outline-none"></div>
+                    <div class="flex-1"><label class="text-xs font-bold text-slate-400 block mb-1">ชื่อวันหยุด</label><input type="text" id="holName" placeholder="เช่น วันสงกรานต์, วันแรงงาน" class="border rounded-lg p-3 w-full bg-slate-50 outline-none focus:ring-2 focus:ring-red-400"></div>
                     <button onclick="addHoliday()" class="bg-red-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-red-600 shadow mb-[1px]">บันทึก</button>
                 </div>
             </div>
@@ -296,7 +313,7 @@
     </div>
 
     <script>
-        const API = 'https://script.google.com/macros/s/AKfycbwY9wLYSoryBmaEV8ZFgkNJ2CMDBetEU_rJs2IBwjvhc0xw8R4w8p1pi09h34WGVDsRwg/exec'; 
+        const API = 'https://script.google.com/macros/s/AKfycbz5Jzvch3SU0L_-CJqWgKZ_Sy5kv9Zm0zA0ItvEj0KYlEVk7Jwzf6wACNkv-nIPMT7D/exec'; 
         const LIFF_ID = ''; 
 
         let USER=null, DATA=null, CAL=null, CHART={};
@@ -309,7 +326,6 @@
             else { APP_STATE.isSyncing = false; el.classList.add('translate-y-[-150%]'); }
         }
 
-        // --- 🚀 การดักจับ ERROR แบบสมบูรณ์แบบ (ตามที่คุณแนะนำ) ---
         async function req(body, silent = false) {
             const loader = document.getElementById('loader');
             
@@ -322,7 +338,7 @@
                 }
 
                 const controller = new AbortController();
-                const timeout = setTimeout(() => controller.abort(), 20000); // 20 วิ Timeout
+                const timeout = setTimeout(() => controller.abort(), 20000);
 
                 const response = await fetch(API, {
                     method: 'POST',
@@ -409,19 +425,16 @@
             
             document.getElementById('main').classList.remove('hidden');
             
-            // เรียกใช้ฟังก์ชัน nav() โดยไม่ให้บั๊ก event
             nav('dashboard', null);
             if(LIFF_ID) liff.init({ liffId: LIFF_ID });
         }
 
-        // --- 🚀 ฟังก์ชันเปลี่ยนหน้าอัปเกรดความปลอดภัยตามแนะนำ ---
         function nav(id, clickedButton = null) {
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
 
             if (clickedButton) {
                 clickedButton.classList.add('active');
             } else {
-                // อัปเดต Selector ให้รองรับการใส่ this ใน DOM
                 const button = document.querySelector(`.nav-item[onclick*="nav('${id}'"]`);
                 if (button) button.classList.add('active');
             }
@@ -483,7 +496,6 @@
 
         function renderDashStatsOnly() {
             if(!APP_STATE.hist) return;
-            // คำนวณเฉพาะรายการที่นับโควต้า (สำหรับ Dashboard)
             const used = APP_STATE.hist.length; 
             const lim = (DATA && DATA.userLimit) ? DATA.userLimit : 15;
             document.getElementById('statPersonal').innerText = used;
@@ -538,11 +550,14 @@
             } 
         }
 
+        // --- 🎨 ระบบปฏิทินแบบ Masterpiece ---
         async function loadCalView(){
             if(CAL) { CAL.destroy(); CAL=null; }
             CAL = new FullCalendar.Calendar(document.getElementById('calendar'), {
-                initialView:'dayGridMonth', locale:'th', height:'100%',
-                weekends: false, 
+                initialView:'dayGridMonth', 
+                locale:'th', 
+                height:'100%',
+                weekends: true, // เปิดการแสดงผลวันเสาร์-อาทิตย์
                 headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,listMonth' },
                 dayMaxEventRows: false,
                 events: async(info, success) => {
@@ -573,12 +588,23 @@
                         
                         let hols = [];
                         if(DATA && DATA.holidays) {
-                            hols = DATA.holidays.map(h => ({ title: `🛑 ${h.name}`, start: h.date, display: 'background', color:'#fee2e2' }));
+                            hols = DATA.holidays.map(h => ({ 
+                                title: h.name, // ใช้ชื่อวันหยุดตามที่ Admin พิมพ์
+                                start: h.date, 
+                                classNames: ['holiday-evt'], // ผูก CSS ป้ายประกาศสีแดง
+                                allDay: true
+                            }));
                         }
                         success([...processedLeaves, ...hols]);
                     } catch(e) { console.error(e); success([]); }
                 },
                 eventContent: function(arg) {
+                    // หากเป็น Event วันหยุดนักขัตฤกษ์ สร้างป้ายประกาศสีแดงชัดเจน
+                    if (arg.event.classNames.includes('holiday-evt')) {
+                        return { html: `<div class="p-1 text-center text-red-700 font-bold text-xs whitespace-normal leading-tight"><i class="fa-solid fa-star text-red-500 mr-1"></i>${arg.event.title}</div>` };
+                    }
+                    
+                    // หากเป็นการลงวันลาปกติ
                     if (arg.event.display === 'background') return;
                     const { type, note } = arg.event.extendedProps;
                     return { html: `<div class="fc-event-main"><span class="evt-name">${arg.event.title}</span><span class="evt-type">${type}</span>${note ? `<span class="evt-note">${note}</span>` : ''}</div>` };
@@ -642,7 +668,26 @@
             if(res.success) Swal.fire('เสร็จสิ้น', res.message || 'บันทึกการปรับโควต้าแล้ว','success');
             else Swal.fire('ล้มเหลว', res.message || 'ไม่สามารถอัปเดตได้', 'error');
         }
-        async function addHoliday(){ const d=document.getElementById('holDate').value, n=document.getElementById('holName').value; if(!d||!n) return; await req({action:'addHoliday', date:d, name:n, userId:USER.id}); Swal.fire('เสร็จสิ้น','บันทึกวันหยุดแล้ว','success'); document.getElementById('holDate').value=''; document.getElementById('holName').value=''; }
+
+        // --- 🚀 อัปเดต DATA.holidays อัตโนมัติเมื่อ Admin เพิ่มวันหยุด ---
+        async function addHoliday(){ 
+            const d=document.getElementById('holDate').value, n=document.getElementById('holName').value; 
+            if(!d||!n) return; 
+            
+            const res = await req({action:'addHoliday', date:d, name:n, userId:USER.id}); 
+            if(res.success) {
+                Swal.fire('เสร็จสิ้น','บันทึกวันหยุดแล้ว ปฏิทินจะแสดงผลทันที','success'); 
+                
+                // อัปเดตข้อมูลในฝั่ง Frontend ทันทีเพื่อให้แสดงในปฏิทินโดยไม่ต้องรีเฟรชหน้าเว็บ
+                if(DATA && DATA.holidays) {
+                    DATA.holidays.push({date: d, name: n});
+                }
+                
+                document.getElementById('holDate').value=''; 
+                document.getElementById('holName').value=''; 
+            }
+        }
+
         async function loadReport(){ 
             const s=document.getElementById('repS').value, e=document.getElementById('repE').value; 
             if(!s || !e) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกช่วงเวลาให้ครบถ้วน', 'warning'); 
